@@ -1,0 +1,255 @@
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <meta charset="UTF-8" />
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+</head>
+<style>
+    .player_game {
+        font-size: 10px;
+    }
+    .world {
+        width: 2px;
+        height: 2px;
+    }
+</style>
+<body>
+    <div id="main"></div>
+    <script type="text/babel">
+        let scale = 4;
+        let worlds = [
+            'Fostral',
+            'Glorx',
+            'Necross',
+            'Xplo',
+            'Koks',
+            'Boozeena',
+            'Weexow',
+            'Hmok',
+            'Threall',
+            'Arkonoy',
+            'Satadi',
+        ]
+        let colors = [
+            'green',
+            'orange',
+            'blue',
+            'yellow',
+            'red',
+            'white',
+            'gray',
+            'black',
+            'white',
+            'white'
+        ]
+        let cars = [
+            'Кислый Монк',
+            'Пернатый Санитар',
+            'Мгновенный',
+            'Потрошитель',
+            'Мамочка',
+            'Дряхлый Душегуб',
+            'Железный Призрак',
+            'атТрактор',
+            'Арканоид',
+            'Безумный Коновал',
+            'Пуля',
+            'Клёпаный Гроб',
+            'Прокалыватель',
+            'Реаниматор',
+            'БЛОХ',
+            'СМОК',
+            'МОТОК',
+            'ШРОТ',
+            'ДОХОД',
+            'Песколаз',
+            'Последний из Могикан',
+            'Жаба',
+            'Винтокрыл',
+            'Червонец',
+        ]
+        let WorldHtml = function (props) {
+            var poll = setInterval(function () {
+                let $world = $('#w'+props.id);
+                if ($world[0] && $world[0].naturalWidth) {
+                    clearInterval(poll);
+                    $world.css('width', parseInt($world[0].naturalWidth / scale));
+                    $world.css('height', parseInt($world[0].naturalHeight / scale));
+                }
+            }, 10);
+            return <span><img className="world" id={'w'+props.id} src={props.id+'.png'}/></span>;
+        }
+        let Component = function (props) {
+            let [state, setState] = React.useState();
+            let [legend, setLegend] = React.useState(true);
+            let [watch, setWatch] = React.useState({enabled: false, player: null});
+            React.useEffect(() => {
+                // setInterval(() => {
+                //     $('.world').each(function() {
+                //         $(this).css('width', parseInt(this.naturalWidth / scale));
+                //         $(this).css('height', parseInt(this.naturalHeight / scale));
+                //     })
+                //     $.get('../server.json', (result) => {
+                //         setState(result);
+                //     })
+                // }, 100);
+                let connect = () => {
+                    var ws = new WebSocket("ws://vangers.dilesoft.ru:8084");
+                    ws.onmessage = function (event) {
+                        try {
+                            setState(JSON.parse(event.data));
+                        } catch (e) {
+
+                        }
+                    }
+                    ws.onclose = function(e) {
+                        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+                        setTimeout(function() {
+                        connect();
+                        }, 1000);
+                    };
+
+                    ws.onerror = function(err) {
+                        console.error('Socket encountered error: ', err.message, 'Closing socket');
+                        ws.close();
+                    };
+                }
+                connect();
+            }, []);
+            if (!state) {
+                return 'Loading...';
+            }
+            return <>
+                <div style={{position: 'fixed', backgroundColor: 'white', zIndex: '2000'}}>
+                    <div onClick={() =>{setLegend(!legend)}}>[{legend ? '-' : '+'}]</div>
+                    {legend ? <div>
+                            {state.games.map((game, game_i)=>{
+                                return game.players.map((player, player_i) => {
+                                    let $player = $('#player-'+game_i+'-'+player_i);
+                                    let player_stat = '';
+                                    if (game.type == 'P') {
+                                        player_stat += 'CP: '+ player.statistics.CheckpointLighting;
+                                    }
+                                    if (game.type == 'V') {
+                                        player_stat += 'K: '+ player.kills;
+                                    }
+                                    if (game.type == 'M') {
+                                        player_stat += 'Items: '+ player.statistics.ItemCount1 + ', ' + player.statistics.ItemCount2;
+                                    }
+                                    try {
+                                        if (watch.enabled && watch.player == player_i) {
+                                            $player[0].scrollIntoView({block: 'center', inline: 'center'});
+                                        }
+                                    } catch (e) {
+
+                                    }
+                                    return <div onClick={()=>{
+                                        try {
+                                            $player[0].scrollIntoView({block: 'center', inline: 'center'});
+                                        } catch (e) {
+
+                                        }
+                                    }}>
+                                        {game_i + '.' + game.name + '(' + game.type + '): ' + player.name} [{player_stat}]
+                                         <i>({worlds[player.world]}, {player.x}:{player.y})</i>
+                                         <span 
+                                            style={{fontWeight: watch.enabled && watch.player == player_i ? 'bold' : 'initial'}}
+                                            onClick={() => {
+                                             if (watch.player == player_i) {
+                                                if (watch.enabled) {
+                                                    setWatch({enabled: false, player: null});
+                                                } else {
+                                                    setWatch({enabled: true, player: player_i});
+                                                }
+                                             } else {
+                                                setWatch({enabled: true, player: player_i});
+                                             }
+                                         }}>[watch]</span>
+                                    </div>
+                                });
+                            })}
+                        </div>
+                    : null}
+                </div>
+                <div style={{whiteSpace: 'nowrap', display: 'flex'}}>
+                <WorldHtml id="0"/>
+                <WorldHtml id="1"/>
+                <WorldHtml id="2"/>
+                <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <WorldHtml id="3"/>
+                    <WorldHtml id="4"/>
+                    <WorldHtml id="5"/>
+                    <WorldHtml id="6"/>
+                </div>
+                <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <WorldHtml id="7"/>
+                    <WorldHtml id="8"/>
+                    <WorldHtml id="9"/>
+                    <WorldHtml id="10"/>
+                </div>
+                {
+                    state.games.map((game, game_i)=>{
+                        return [game.players.map((player, player_i) => {
+                            let $world = $('#w'+player.world);
+                            if (!$world[0]) {
+                                return null;
+                            }
+                            let text = [];
+                            text.push(<>&bull;&nbsp;{player.name}</>);
+                            
+                            if (game.type == 'P') {
+                                text.push(<><br/><span className="player_game">CP: {player.statistics.CheckpointLighting}</span></>);
+                            }
+                            if (game.type == 'V') {
+                                text.push(<><br/><span className="player_game">K: {player.kills}</span></>);
+                            }
+                            if (game.type == 'M') {
+                                text.push(<><br/><span className="player_game">Items: {player.statistics.ItemCount1}, {player.statistics.ItemCount2}</span></>);
+                            }
+                            text.push(<><br/>
+                                <span class="player_game">{game_i}.{game.name}</span>
+                            </>);
+                            return <span id={'player-'+game_i+'-'+player_i} className="player" style={{
+                                zIndex: '1000',
+                                position: 'absolute',
+                                color: colors[player.color],
+                                left: $world[0].offsetLeft + parseInt(((player.x + (player.world == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale),
+                                top: $world[0].offsetTop + parseInt(((player.y + (player.world == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale),
+                                textShadow: '0px 0px 1em black',
+                            }}>{text}</span>
+                        }),
+                        game.worlds ? game.worlds.map((world) => {
+                            let $world = $('#w'+world.id);
+                            return world.objects ? world.objects.map((object, object_i) => {
+                                if (!$world[0]) {
+                                    return null;
+                                }
+                                return <span className="player" style={{
+                                    zIndex: '800',
+                                    position: 'absolute',
+                                    color: 'gray',
+                                    left: $world[0].offsetLeft + parseInt(((object.x + (world.id == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale),
+                                    top: $world[0].offsetTop + parseInt(((object.y + (world.id == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale),
+                                }}>&bull;</span>
+                            }) : null
+                        }) : null,
+                        ]
+                    })
+                }
+                </div>
+            </>
+        }
+
+        ReactDOM.render(
+          <Component/>,
+          document.getElementById('main')
+        );
+  
+      </script>
+</body>
+</html>

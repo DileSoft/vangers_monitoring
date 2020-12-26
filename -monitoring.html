@@ -1,0 +1,91 @@
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script>
+        let scale = 4;
+        function getOffsets( elem )
+        {
+            var offsetLeft = 0;
+            var offsetTop = 0;
+            do {
+            if (elem && !isNaN( elem.offsetLeft ) )
+            {
+                offsetLeft += elem.offsetLeft;
+            }
+            } while( elem && (elem = elem.offsetParent) );
+            do {
+            if (elem && !isNaN( elem.offsetTop ) )
+            {
+                offsetTop += elem.offsetTop;
+            }
+            } while( elem && (elem = elem.offsetParent) );
+            return {left: offsetLeft, top: offsetTop};
+        }
+        $(()=>{
+            setInterval(() => {
+                $('.world').each(function() {
+                    $(this).css('width', parseInt(this.naturalWidth / scale));
+                    $(this).css('height', parseInt(this.naturalHeight / scale));
+                })
+                $.get('../server.json', (result) => {
+                    console.log(result);
+                    let legend = '';
+                    $('.player').remove();
+                    if (result.games.length) {
+                        result.games.forEach((game, game_i) => {
+                            game.players.forEach((player, player_i) => {
+                                let $world = $('#w'+player.world);
+                                let text = '&bull;&nbsp;' + player.name;
+                                if (game.type == 'P') {
+                                    text += '<br/><span class="player_game">CP: ' + player.statistics.CheckpointLighting + '</span>';
+                                }
+                                if (game.type == 'V') {
+                                    text += '<br/><span class="player_game">K: ' + player.kills + '</span>';
+                                }
+                                text += '<br/><span class="player_game">' + game.name + '</span>';
+                                legend += '<div onClick="$(\'#player-'+game_i+'-'+player_i+'\')[0].scrollIntoView()">' + game.name + ': ' + player.name + '</div>';
+                                let $player = $('<span class="player">' + text + '</span>');
+                                $player.appendTo('body');
+                                $player.css('z-index', '1000');
+                                $player.css('position', 'absolute');
+                                $player.css('color', 'white');
+                                $player.css('font-size', '20px');
+                                $player.css('text-shadow', '0px 0px 1em black');
+                                $player.css('left', $world[0].offsetLeft + parseInt(((player.x + (player.world == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale));
+                                $player.css('top', $world[0].offsetTop + parseInt(((player.y + (player.world == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale));
+                                $player.attr('id', 'player-'+game_i+'-'+player_i);
+                            })
+                        })
+                    }
+                    $('#legend_content').html(legend);
+                })
+            }, 1000);
+        })
+    </script>
+</head>
+<style>
+    .player_game {
+        font-size: 10px;
+    }
+</style>
+<body>
+    <div id="legend"><div><span onClick="$('#legend_content').toggle();">[x]</span><div id="legend_content"></div>
+    <div style="white-space: nowrap; display: flex;">
+        <span><img class="world" id="w0" src="0.png"/></span>
+        <span><img class="world" id="w1" src="1.png"/></span>
+        <span><img class="world" id="w2" src="2.png"/></span>
+        <div style="display: flex; flex-direction: column;">
+            <span><img class="world" id="w3" src="3.png"/></span>
+            <span><img class="world" id="w4" src="4.png"/></span>
+            <span><img class="world" id="w5" src="5.png"/></span>
+            <span><img class="world" id="w6" src="6.png"/></span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+            <span><img class="world" id="w7" src="7.png"/></span>
+            <span><img class="world" id="w8" src="8.png"/></span>
+            <span><img class="world" id="w9" src="9.png"/></span>
+            <span><img class="world" id="w10" src="10.png"/></span>
+        </div>
+    </div>
+</body>
+</html>

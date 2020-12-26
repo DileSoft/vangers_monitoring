@@ -1,0 +1,64 @@
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <meta charset="UTF-8" />
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+</head>
+<body>
+    <div id="main"></div>
+    <script type="text/babel">
+        let Component = function (props) {
+            let [state, setState] = React.useState();
+            React.useEffect(() => {
+                setInterval(() => {
+                    $.get('../server.json', (result) => {
+                        //setState(result);
+                    })
+                }, 100);
+                let connect = () => {
+                    var ws = new WebSocket("ws://vangers.dilesoft.ru:8084");
+                    ws.onmessage = function (event) {
+    //                    console.log(event.data);
+                        try {
+                            setState(JSON.parse(event.data));
+                        } catch (e) {
+                            
+                        }
+                    }
+                    ws.onclose = function(e) {
+                        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+                        setTimeout(function() {
+                        connect();
+                        }, 1000);
+                    };
+
+                    ws.onerror = function(err) {
+                        console.error('Socket encountered error: ', err.message, 'Closing socket');
+                        ws.close();
+                    };
+                }
+                connect();
+            }, []);
+            if (!state) {
+                return 'Loading...';
+            }
+            return <>
+                <pre>
+                    {JSON.stringify(state, null, 2)}
+                </pre>
+            </>
+        }
+
+        ReactDOM.render(
+          <Component/>,
+          document.getElementById('main')
+        );
+  
+      </script>
+</body>
+</html>
