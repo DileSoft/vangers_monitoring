@@ -218,8 +218,8 @@
                                 zIndex: '1000',
                                 position: 'absolute',
                                 color: colors[player.color],
-                                left: $world[0].offsetLeft + parseInt(((player.x + (player.world == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale),
-                                top: $world[0].offsetTop + parseInt(((player.y + (player.world == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale),
+                                left: $world[0].offsetLeft + player.x / scale,
+                                top: $world[0].offsetTop + player.y / scale,
                                 textShadow: '0px 0px 1em black',
                             }}>{text}</span>
                         }),
@@ -233,8 +233,8 @@
                                     zIndex: '800',
                                     position: 'absolute',
                                     color: 'gray',
-                                    left: $world[0].offsetLeft + parseInt(((object.x + (world.id == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale),
-                                    top: $world[0].offsetTop + parseInt(((object.y + (world.id == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale),
+                                    left: $world[0].offsetLeft + object.x / scale,
+                                    top: $world[0].offsetTop + object.y / scale,
                                 }}>&bull;</span>
                             }) : null
                         }) : null,
