@@ -85,6 +85,7 @@
             return <span><img className="world" id={'w'+props.id} src={props.id+'.png'}/></span>;
         }
         let prevCoords = [];
+        let prevAngles = [];
         let Component = function (props) {
             let [state, setState] = React.useState();
             let [legend, setLegend] = React.useState(true);
@@ -203,11 +204,14 @@
                             let text = [];
                             let imgStyle = {width: '40px'};
                             if (prevCoords[player_i]) {
-                                imgStyle.transform = 'rotate(' + Math.atan((player.y-prevCoords[player_i].y) / (player.x-prevCoords[player_i].x)) + 'rad)';
+                                if (player.y-prevCoords[player_i].y !=0 && player.x-prevCoords[player_i].x != 0) {
+                                    prevAngles[player_i] = Math.atan2(player.y-prevCoords[player_i].y, player.x-prevCoords[player_i].x);
+                                }
+                                imgStyle.transform = 'rotate(' + prevAngles[player_i] + 'rad)';
                             }
                             prevCoords[player_i] = {x: player.x, y: player.y};
                             text.push(<img src={'cars/' + player.carindex + '.png'} style={imgStyle}/>);
-                            text.push(<>&bull;&nbsp;{player.name}</>);
+                            text.push(<>{player.name}</>);
                             
                             if (game.type == 'P') {
                                 text.push(<><br/><span className="player_game">CP: {player.statistics.CheckpointLighting}</span></>);
@@ -225,8 +229,8 @@
                                 zIndex: '1000',
                                 position: 'absolute',
                                 color: colors[player.color],
-                                left: $world[0].offsetLeft + parseInt(((player.x + (player.world == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale),
-                                top: $world[0].offsetTop + parseInt(((player.y + (player.world == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale),
+                                left: $world[0].offsetLeft + parseInt(((player.x + (player.world == 10 ? 0 : 130)) % $world[0].naturalWidth) / scale) - 20,
+                                top: $world[0].offsetTop + parseInt(((player.y + (player.world == 10 ? 0 : 130)) % $world[0].naturalHeight) / scale) - 20,
                                 textShadow: '0px 0px 1em black',
                             }}>{text}</span>
                         }),
