@@ -84,6 +84,7 @@
             }, 10);
             return <span><img className="world" id={'w'+props.id} src={props.id+'.png'}/></span>;
         }
+        let prevCoords = [];
         let Component = function (props) {
             let [state, setState] = React.useState();
             let [legend, setLegend] = React.useState(true);
@@ -200,6 +201,12 @@
                                 return null;
                             }
                             let text = [];
+                            let imgStyle = {width: '40px'};
+                            if (prevCoords[player_i]) {
+                                imgStyle.transform = 'rotate(' + Math.atan((player.y-prevCoords[player_i].y) / (player.x-prevCoords[player_i].x)) + 'rad)';
+                            }
+                            prevCoords[player_i] = {x: player.x, y: player.y};
+                            text.push(<img src={'cars/' + player.carindex + '.png'} style={imgStyle}/>);
                             text.push(<>&bull;&nbsp;{player.name}</>);
                             
                             if (game.type == 'P') {
