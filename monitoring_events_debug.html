@@ -16,10 +16,14 @@
             let [state, setState] = React.useState();
             React.useEffect(() => {
                 let connect = () => {
-                    var ws = new WebSocket("ws://vangers.dilesoft.ru:8084");
+                    var ws = new WebSocket("ws://vangers.dilesoft.ru:8088");
                     ws.onmessage = function (event) {
-    //                    console.log(event.data);
                         try {
+                            let data = JSON.parse(event.data);
+                            console.log(JSON.parse(event.data));
+                            if (data.name === 'DIRECT_SENDING') {
+                                console.log(`${data.player.name}: ${data.message}`);
+                            }
                             setState(JSON.parse(event.data));
                         } catch (e) {
                             
