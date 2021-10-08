@@ -47,31 +47,30 @@ client.connect(2197, '127.0.0.1', function() {
 
 var send_event = (code, data) => {
     let event = code + data;
-    client.write(hex2buffer(shortHex(event.length / 2) + event)); //attach game
+    client.write(hex2buffer(shortHex(event.length / 2) + event));
 }
 
 client.on('data', async function(data) {
-    // console.log('Received: ' + data);
     console.log(data);
+    // console.log(data.toString());
     if (data.toString() === 'Enter, my son, please...\x00\x01') {
-        // client.write(hex2buffer('010081')); //get games
-        // client.write(hex2buffer(shortHex(5) + '83' + longHex(1))); //attach game
-        send_event('83', longHex(1));
+        send_event('83', longHex(1)); //attach game
         await sleep(1000);
-        const name = 'vangers bot';
-        // client.write(hex2buffer(shortHex(1 + name.length + 2) + '88' + stringToAsciiz(name) + '00')); //register name
-        send_event('88', stringToAsciiz(name) + '00');
+        const name = 'vangersbot 2';
+        send_event('88', stringToAsciiz(name) + '00'); //set name
         await sleep(1000);
         const message = 'hello world';
-        // client.write(hex2buffer(shortHex(5 + message.length + 1) + '95' + 'FFFFFFFF' + stringToAsciiz(message))); //send message
-        send_event('95', stringToAsciiz(name) + 'FFFFFFFF' + stringToAsciiz(message));
-        await sleep(1000);
-        // client.write(hex2buffer(shortHex(1) + '86')); //close socket
-        send_event('86', '');
-        // setInterval( () => client.write(hex2buffer('0900' + '95' + 'FFFFFFFF' + '41414100')), 1000); //send message
+        send_event('95', 'FFFFFFFF' + stringToAsciiz(message));//send message
     }
-    if (data[3].toString(16) === 'ce') {
-
+    if (data[2] && data[2].toString(16) === 'ce') {
+        const bot_command = data.slice(4, data.length - 1).toString();
+        console.log(bot_command);
+        if (bot_command === 'bot') {
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('hi'));
+        }
+        if (bot_command === 'bot exit') {
+            send_event('86', '');
+        }
     }
 });
 
