@@ -55,15 +55,19 @@ client.on('data', async function(data) {
     console.log(data);
     if (data.toString() === 'Enter, my son, please...\x00\x01') {
         // client.write(hex2buffer('010081')); //get games
-        client.write(hex2buffer(shortHex(5) + '83' + longHex(1))); //attach game
+        // client.write(hex2buffer(shortHex(5) + '83' + longHex(1))); //attach game
+        send_event('83', longHex(1));
         await sleep(1000);
         const name = 'vangers bot';
-        client.write(hex2buffer(shortHex(1 + name.length + 2) + '88' + stringToAsciiz(name) + '00')); //register name
+        // client.write(hex2buffer(shortHex(1 + name.length + 2) + '88' + stringToAsciiz(name) + '00')); //register name
+        send_event('88', stringToAsciiz(name) + '00');
         await sleep(1000);
         const message = 'hello world';
-        client.write(hex2buffer(shortHex(5 + message.length + 1) + '95' + 'FFFFFFFF' + stringToAsciiz(message))); //send message
+        // client.write(hex2buffer(shortHex(5 + message.length + 1) + '95' + 'FFFFFFFF' + stringToAsciiz(message))); //send message
+        send_event('95', stringToAsciiz(name) + 'FFFFFFFF' + stringToAsciiz(message));
         await sleep(1000);
-        client.write(hex2buffer(shortHex(1) + '86')); //close socket
+        // client.write(hex2buffer(shortHex(1) + '86')); //close socket
+        send_event('86', '');
         // setInterval( () => client.write(hex2buffer('0900' + '95' + 'FFFFFFFF' + '41414100')), 1000); //send message
     }
     if (data[3].toString(16) === 'ce') {
