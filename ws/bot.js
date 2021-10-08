@@ -1,4 +1,5 @@
 var net = require('net');
+var Iconv  = require('iconv').Iconv;
 
 function hex2buffer(string, inverse) {
     let bytes = string.match(/.{1,2}/g);
@@ -24,12 +25,10 @@ function shortHex(int) {
 }
 
 function stringToAsciiz(string) {
-    var arr=[];
-    for(var i=0; i<string.length; i++) {
-        arr.push(string.charCodeAt(i))
-    }
-    arr.push(0);
-    return arr.map(x => x.toString(16).padStart(2, '0'))
+    let iconv = new Iconv('UTF-8', 'CP866');
+    string = [...iconv.convert(string)];
+    string.push(0);
+    return string.map(x => x.toString(16).padStart(2, '0'))
     .join('').toUpperCase();
 }
 
@@ -59,11 +58,13 @@ client.on('data', async function(data) {
         const name = 'vangersbot 2';
         send_event('88', stringToAsciiz(name) + '00'); //set name
         await sleep(1000);
-        const message = 'hello world';
+        const message = 'привет мир';
         send_event('95', 'FFFFFFFF' + stringToAsciiz(message));//send message
     }
     if (data[2] && data[2].toString(16) === 'ce') {
-        const bot_command = data.slice(4, data.length - 1).toString();
+        let bot_command = data.slice(4, data.length - 1);
+        let iconv = new Iconv('CP866', 'UTF-8');
+        bot_command = iconv.convert(bot_command).toString('utf-8');
         console.log(bot_command);
         if (bot_command === 'bot') {
             send_event('95', 'FFFFFFFF' + stringToAsciiz('hi'));
