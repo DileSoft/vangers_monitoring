@@ -4,6 +4,9 @@ const fs = require('fs');
 const wss = new WebSocket.Server({ port: 8084 });
 
 let prev = '';
+let results = {
+
+};
 wss.on('connection', function connection(ws) {
     
     ws.send(prev);
@@ -18,7 +21,22 @@ let broadcast = (data) => {
         wss.clients.forEach(function each(client) {
             client.send(data);
         })
-        
+
+        let json = JSON.parse(data);
+        json.games.forEach(game => {
+            if (!results[game.uuid]) {
+                results[game.uuid] = {
+                    players: {}
+                };
+            }
+            let old_players = results[game.uuid].players;
+            results[game.uuid] = JSON.parse(JSON.stringify(game));
+            results[game.uuid].players = old_players;
+            game.players.forEach(player => {
+                results[game.uuid].players[player.ID] = player;
+            });
+        });
+    
         fs.writeFile('../../server.json', data, ()=>{});
         prev = data;
     }
@@ -29,6 +47,11 @@ let broadcast = (data) => {
 //             broadcast(data);
 //     });
 // }, 10);
+
+results = JSON.parse(fs.readFileSync(__dirname + '/history.json').toString('utf-8'));
+setInterval(() => {
+    fs.writeFile(__dirname + '/history.json', JSON.stringify(results), ()=>{});
+}, 1000);
 
 var net = require('net');
 var server = net.createServer(function(socket) {

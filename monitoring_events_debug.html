@@ -20,11 +20,8 @@
                     ws.onmessage = function (event) {
                         try {
                             let data = JSON.parse(event.data);
-                            console.log(JSON.parse(event.data));
-                            if (data.name === 'DIRECT_SENDING') {
-                                console.log(`${data.player.name}: ${data.message}`);
-                            }
-                            setState(JSON.parse(event.data));
+                            console.log(data);
+                            setState(data.results);
                         } catch (e) {
                             
                         }
