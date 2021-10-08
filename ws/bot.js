@@ -53,7 +53,7 @@ client.on('data', async function(data) {
     console.log(data);
     // console.log(data.toString());
     if (data.toString() === 'Enter, my son, please...\x00\x01') {
-        send_event('83', longHex(1)); //attach game
+        send_event('83', longHex(parseInt(process.argv[2]))); //attach game
         await sleep(1000);
         const name = 'vangersbot 2';
         send_event('88', stringToAsciiz(name) + '00'); //set name
@@ -76,6 +76,6 @@ client.on('data', async function(data) {
 });
 
 client.on('close', function() {
-    client.write(hex2buffer('010086'));
+    // client.write(hex2buffer('010086'));
 	console.log('Connection closed');
 });
