@@ -1,5 +1,6 @@
 var net = require('net');
 var Iconv  = require('iconv').Iconv;
+var iconv = require('iconv-lite');
 
 function hex2buffer(string, inverse) {
     let bytes = string.match(/.{1,2}/g);
@@ -51,15 +52,19 @@ var send_event = (code, data) => {
 
 client.on('data', async function(data) {
     console.log(data);
-    // console.log(data.toString());
+    console.log(data.toString());
     if (data.toString() === 'Enter, my son, please...\x00\x01') {
-        send_event('83', longHex(parseInt(process.argv[2]))); //attach game
-        await sleep(1000);
-        const name = 'vangersbot 2';
-        send_event('88', stringToAsciiz(name) + '00'); //set name
-        await sleep(1000);
-        const message = 'привет мир';
-        send_event('95', 'FFFFFFFF' + stringToAsciiz(message));//send message
+        if (process.argv[2]) {
+            send_event('83', longHex(parseInt(process.argv[2]))); //attach game
+            await sleep(1000);
+            const name = 'vangersbot 2';
+            send_event('88', stringToAsciiz(name) + '00'); //set name
+            await sleep(1000);
+            const message = 'привет мир';
+            send_event('95', 'FFFFFFFF' + stringToAsciiz(message));//send message
+        } else {
+            send_event('81', '');
+        }
     }
     if (data[2] && data[2].toString(16) === 'ce') {
         let bot_command = data.slice(4, data.length - 1);
@@ -70,6 +75,38 @@ client.on('data', async function(data) {
             send_event('95', 'FFFFFFFF' + stringToAsciiz('hi'));
         }
         if (bot_command === 'bot exit') {
+            send_event('86', '');
+        }
+        if (bot_command === 'bot start') {
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('5'));
+            await sleep(1000);
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('4'));
+            await sleep(1000);
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('3'));
+            await sleep(1000);
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('2'));
+            await sleep(1000);
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('1'));
+            await sleep(1000);
+            send_event('95', 'FFFFFFFF' + stringToAsciiz('ПОЕХАЛИ'));
+        }
+    }
+    if (data[2] && data[2].toString(16) === 'c1') {
+        let games_count = data[3];
+        console.log('games count:' + games_count);
+        data = [...data];
+        data = data.slice(4);
+        while (data.length > 0) {
+            const game_id = new DataView(new Uint8Array(data.slice(0,4)).buffer).getInt32(0, true);
+            data = data.slice(4);
+            console.log('game id: ' + game_id);
+            let i = 0;
+            do {
+                i++;
+            } while (data[i] !== 0);
+            const game_name = data.slice(0,i);
+            console.log('game_name:' + iconv.decode (new Uint8Array(game_name), 'cp866'));
+            data = data.slice(i+1);
             send_event('86', '');
         }
     }

@@ -9,6 +9,7 @@
   "author": "",
   "dependencies": {
     "iconv": "^3.0.1",
+    "iconv-lite": "^0.6.3",
     "ws": "^8.2.3"
   }
 }
