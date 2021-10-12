@@ -1,36 +1,11 @@
 var net = require('net');
 var Iconv  = require('iconv').Iconv;
 var iconv = require('iconv-lite');
+const SmartBuffer = require('smart-buffer').SmartBuffer;
 
-function hex2buffer(string, inverse) {
-    let bytes = string.match(/.{1,2}/g);
-    return Buffer.from(bytes.map(byte => parseInt(byte, 16)));
-}
-
-function longHex(int) {
-    arr = new ArrayBuffer(4); // an Int32 takes 4 bytes
-    view = new DataView(arr);
-    view.setUint32(0, int, true);
-    return [...new Uint8Array(arr)]
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('').toUpperCase();
-}
-
-function shortHex(int) {
-    arr = new ArrayBuffer(2); // an Int32 takes 4 bytes
-    view = new DataView(arr);
-    view.setUint16(0, int, true);
-    return [...new Uint8Array(arr)]
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('').toUpperCase();
-}
-
-function stringToAsciiz(string) {
+function utf8tocp866(string) {
     let iconv = new Iconv('UTF-8', 'CP866');
-    string = [...iconv.convert(string)];
-    string.push(0);
-    return string.map(x => x.toString(16).padStart(2, '0'))
-    .join('').toUpperCase();
+    return iconv.convert(string);
 }
 
 let sleep = (ms) => {
@@ -50,65 +25,71 @@ var send_event = (code, data) => {
     client.write(hex2buffer(shortHex(event.length / 2) + event));
 }
 
+var send_event_buffer = (code, dataBuffer) => {
+    const codeBuffer = new SmartBuffer().writeUInt8(code);
+    const lengthBuffer = new SmartBuffer().
+        writeInt16LE(codeBuffer.length + dataBuffer.length)
+    client.write(Buffer.concat([lengthBuffer.toBuffer(), codeBuffer.toBuffer(), dataBuffer.toBuffer()]));
+}
+
 client.on('data', async function(data) {
     console.log(data);
     console.log(data.toString());
+    const inputBuffer = SmartBuffer.fromBuffer(data);
+    const inputLength = inputBuffer.readUInt16LE();
+    let inputCode;
+    if (inputLength) {
+        inputCode = inputBuffer.readUInt8();
+    }
+
     if (data.toString() === 'Enter, my son, please...\x00\x01') {
         if (process.argv[2]) {
-            send_event('83', longHex(parseInt(process.argv[2]))); //attach game
+            send_event_buffer(0x83, new SmartBuffer().writeUInt32LE(parseInt(process.argv[2]))); //attach game
             await sleep(1000);
             const name = 'vangersbot 2';
-            send_event('88', stringToAsciiz(name) + '00'); //set name
+            send_event_buffer(0x88, new SmartBuffer().writeBufferNT(utf8tocp866(name)).writeStringNT('')); //set name
             await sleep(1000);
             const message = 'привет мир';
-            send_event('95', 'FFFFFFFF' + stringToAsciiz(message));//send message
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866(message))); //send message
         } else {
-            send_event('81', '');
+            send_event_buffer(0x81, new SmartBuffer());
         }
     }
-    if (data[2] && data[2].toString(16) === 'ce') {
+    if (inputLength && inputCode === 0xce) {
         let bot_command = data.slice(4, data.length - 1);
         let iconv = new Iconv('CP866', 'UTF-8');
         bot_command = iconv.convert(bot_command).toString('utf-8');
         console.log(bot_command);
         if (bot_command === 'bot') {
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('hi'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('hi'))); //send message
         }
         if (bot_command === 'bot exit') {
-            send_event('86', '');
+            send_event_buffer(0x86, new SmartBuffer());
         }
         if (bot_command === 'bot start') {
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('5'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('5'))); //send message
             await sleep(1000);
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('4'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('4'))); //send message
             await sleep(1000);
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('3'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('3'))); //send message
             await sleep(1000);
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('2'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('2'))); //send message
             await sleep(1000);
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('1'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('1'))); //send message
             await sleep(1000);
-            send_event('95', 'FFFFFFFF' + stringToAsciiz('ПОЕХАЛИ'));
+            send_event_buffer(0x95, new SmartBuffer().writeUInt32LE(0xFFFFFFFF).writeBufferNT(utf8tocp866('ПОЕХАЛИ'))); //send message
         }
     }
-    if (data[2] && data[2].toString(16) === 'c1') {
-        let games_count = data[3];
+    if (inputLength && inputCode === 0xc1) {
+        let games_count = inputBuffer.readUInt8();
         console.log('games count:' + games_count);
-        data = [...data];
-        data = data.slice(4);
-        while (data.length > 0) {
-            const game_id = new DataView(new Uint8Array(data.slice(0,4)).buffer).getInt32(0, true);
-            data = data.slice(4);
-            console.log('game id: ' + game_id);
-            let i = 0;
-            do {
-                i++;
-            } while (data[i] !== 0);
-            const game_name = data.slice(0,i);
+        while (inputBuffer.readOffset !== inputBuffer.length) {
+            const game_id = inputBuffer.readUInt32LE();
+            console.log('game_id:' + game_id);
+            const game_name = inputBuffer.readBufferNT('cp866');
             console.log('game_name:' + iconv.decode (new Uint8Array(game_name), 'cp866'));
-            data = data.slice(i+1);
-            send_event('86', '');
         }
+        send_event_buffer(0x86, new SmartBuffer());
     }
 });
 
