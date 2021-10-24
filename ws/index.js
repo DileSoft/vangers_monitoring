@@ -54,11 +54,31 @@ setInterval(() => {
 }, 1000);
 
 var net = require('net');
+let chunks = '';
+let chunks_count = 0;
 var server = net.createServer(function(socket) {
     // confirm socket connection from client
     // console.log((new Date())+'A client connected to server...');
     socket.on('data', function(data) {
-        broadcast(data.toString('utf8'));
+        try {
+            console.log(data.toString());
+            if (chunks === '' && data.toString()[0] !== '{') {
+                return;
+            }
+            if (chunks_count > 10) {
+                chunks = '';
+                chunks_count = 0;
+                return;
+            }
+            chunks += data.toString();
+            chunks_count++;
+            JSON.parse(chunks.toString());
+            broadcast(chunks);
+            chunks = '';
+            chunks_count = 0;
+        } catch (e) {
+            
+        }
     });
     // // send info to client
     // socket.write('Echo from server: NODE.JS Server \r\n');
