@@ -31,7 +31,7 @@
                         key={server} 
                         style={{color: state[server].status ? 'green' : 'red'}}
                     >
-                        {server}: {state[server].status ? "Работает": "Не работает"} с {moment(state[server].changedTime).format('MM.DD.YYYY h:mm:ss')}
+                        {server}: {state[server].status ? "Работает": "Не работает"} с {moment(state[server].changedTime).format('MM.DD.YYYY HH:mm:ss')}
                     </h2>
                 )}
             </>
