@@ -61,7 +61,7 @@ var server = net.createServer(function(socket) {
     // console.log((new Date())+'A client connected to server...');
     socket.on('data', function(data) {
         try {
-            console.log(data.toString());
+            //console.log(data.toString());
             if (chunks === '' && data.toString()[0] !== '{') {
                 return;
             }

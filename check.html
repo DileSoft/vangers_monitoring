@@ -16,7 +16,7 @@
             let [state, setState] = React.useState({});
             setTimeout(async () => {
                 try {
-                    setState((await (await fetch('./ws/history.json')).json()));
+                    setState((await (await fetch('http://dilesoft.vangers.net:2222')).json()));
                 } catch {
                     
                 }
@@ -25,16 +25,9 @@
                 return 'Loading...';
             }
             return <>
-                {Object.values(state).filter(game => !!game.start_time).sort((game1, game2) => game1.start_time > game2.start_time ? -1 : 1).map((game, i) => <div key={i}>
-                    <h2>{game.name ? game.name : 'Без названия'}</h2>
-                    <div>{new Date(game.start_time * 1000).toString()}</div>
-                    {game.players ? Object.values(game.players).map((player, p_i) => <div key={p_i}>
-                        <h4>{player.name}</h4>
-                        <pre>
-                            {JSON.stringify(player, null, 2)}
-                        </pre>
-                    </div>) : null}
-                </div>)}
+                {Object.keys(state).map(server => 
+                    <h2 key={server}>{server}: {state[server] ? "Работает": "Не работает"}</h2>
+                )}
             </>
         }
 
