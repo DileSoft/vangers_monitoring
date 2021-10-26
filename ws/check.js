@@ -19,7 +19,7 @@ setInterval(() => {
           status[server] = false;
           client.destroy();
         });
-        client.connect(2197, server, function() {
+        client.connect(server.endsWith(' [cx]') ? 2195 : 2197, server.endsWith(' [cx]') ? server.match(/^(.*) \[cx\]$/)[1] : server, function() {
             // client.write('Vivat Sicher, Rock\'n\'Roll forever!!!\x00\x01');
             status[server] = true;
             client.destroy();
