@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <!-- Don't use this in production: -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -30,7 +31,7 @@
                         key={server} 
                         style={{color: state[server].status ? 'green' : 'red'}}
                     >
-                        {server}: {state[server].status ? "Работает": "Не работает"} с {new Date(state[server].changedTime).toString()}
+                        {server}: {state[server].status ? "Работает": "Не работает"} с {moment(state[server].changedTime).format('MM.DD.YYYY h:mm:ss')}
                     </h2>
                 )}
             </>

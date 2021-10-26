@@ -20,7 +20,7 @@ const changeStatus = (server, newStatus) => {
 setInterval(() => {
     servers.forEach(server => {
         let client = new net.Socket();
-        client.setTimeout(1000);
+        client.setTimeout(4000);
         client.on('timeout', () => {
             changeStatus(server, false);
             client.destroy();
@@ -30,9 +30,11 @@ setInterval(() => {
           client.destroy();
         });
         client.connect(server.endsWith(' [cx]') ? 2195 : 2197, server.endsWith(' [cx]') ? server.match(/^(.*) \[cx\]$/)[1] : server, function() {
-            // client.write('Vivat Sicher, Rock\'n\'Roll forever!!!\x00\x01');
-            changeStatus(server, true);
-            client.destroy();
+            client.write('Vivat Sicher, Rock\'n\'Roll forever!!!\x00' + (server.endsWith(' [cx]') ? '\x02' : '\x01'));
+        });
+        client.on('data', async function(data) {
+          changeStatus(server, true);
+          client.destroy();
         });
     });
 }, 4000);
