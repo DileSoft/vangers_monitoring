@@ -26,7 +26,12 @@
             }
             return <>
                 {Object.keys(state).map(server => 
-                    <h2 key={server}>{server}: {state[server] ? "Работает": "Не работает"}</h2>
+                    <h2 
+                        key={server} 
+                        style={{color: state[server].status ? 'green' : 'red'}}
+                    >
+                        {server}: {state[server].status ? "Работает": "Не работает"} с {new Date(state[server].changedTime).toString()}
+                    </h2>
                 )}
             </>
         }
