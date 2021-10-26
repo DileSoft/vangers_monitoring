@@ -15,7 +15,7 @@ let sleep = (ms) => {
 }
 
 var client = new net.Socket();
-client.connect(2197, '127.0.0.1', function() {
+client.connect(2197, 'dilesoft.vangers.net', function() {
 	console.log('Connected');
 	client.write('Vivat Sicher, Rock\'n\'Roll forever!!!\x00\x01');
 });
@@ -56,7 +56,8 @@ client.on('data', async function(data) {
         }
     }
     if (inputLength && inputCode === 0xce) {
-        let bot_command = data.slice(4, data.length - 1);
+        inputBuffer.readUInt8();
+        let bot_command = inputBuffer.readBufferNT();
         let iconv = new Iconv('CP866', 'UTF-8');
         bot_command = iconv.convert(bot_command).toString('utf-8');
         console.log(bot_command);
