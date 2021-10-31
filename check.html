@@ -44,14 +44,16 @@
                 </tr></thead><tbody>
                 {Object.keys(state)
                     .sort((server1, server2) => server1 > server2 ? 1 : -1)
-                    .map((server, index, keys) => server.includes('[browser]') ? null :
-                        <tr key={server} className={state[server].status ? 'on' : 'off'}>
+                    .map((server, index, keys) => {
+                        if (server.includes('[browser]')) return null;
+                        const wsServer = keys.find(key => key.includes(server) && key.includes('[browser]') && (server.includes('[cx]') ? key.includes('[cx]') : !key.includes('[cx]')));
+                        return <tr key={server} className={state[server].status ? 'on' : 'off'}>
                             <td>{server}</td>
-                            <td>{keys.find(key => key.includes(server) && key.includes('[browser]') && (server.includes('[cx]') ? key.includes('[cx]') : !key.includes('[cx]'))) ? '+' : null}</td>
+                            <td>{wsServer ? (state[wsServer].status ? '+' : '-') : ''}</td>
                             <td>{state[server].status ? "Работает": "Не работает"}</td>
                             <td>с {moment(state[server].changedTime).format('DD.MM.YYYY HH:mm:ss')}</td>
-                        </tr>
-                    )
+                        </tr>;
+                    })
                 }
             </tbody></table>;
         }
