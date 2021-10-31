@@ -9,6 +9,17 @@
     <!-- Don't use this in production: -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <style>
+        table { border-spacing: 0; }
+        tbody { font-size: 1.5em; font-weight: bold; }
+        tr.on { color: green; }
+        tr.off { color: red; }
+        td { padding: 0.2em; }
+        thead td { text-align: center; }
+        tbody > tr > td:nth-child(2) { text-align: center; }
+        tbody > tr > td:nth-child(3) { text-align: right; }
+        tbody > tr:nth-child(odd) { background-color: #00000011; }
+    </style>
 </head>
 <body>
     <div id="main"></div>
@@ -25,18 +36,26 @@
             if (!state) {
                 return 'Loading...';
             }
-            return <>
+            return <table>
+                <thead><tr>
+                    <td>Адрес</td>
+                    <td>Поддержка<br/>браузерной<br/>версии</td>
+                    <td colspan="2">Состояние</td>
+                </tr></thead><tbody>
                 {Object.keys(state)
                     .sort((server1, server2) => server1 > server2 ? 1 : -1)
-                    .map(server => 
-                    <h2 
-                        key={server} 
-                        style={{color: state[server].status ? 'green' : 'red'}}
-                    >
-                        {server}: {state[server].status ? "Работает": "Не работает"} с {moment(state[server].changedTime).format('DD.MM.YYYY HH:mm:ss')}
-                    </h2>
-                )}
-            </>
+                    .map((server, index, keys) => {
+                        if (server.includes('[browser]')) return null;
+                        const wsServer = keys.find(key => key.includes(server) && key.includes('[browser]') && (server.includes('[cx]') ? key.includes('[cx]') : !key.includes('[cx]')));
+                        return <tr key={server} className={state[server].status ? 'on' : 'off'}>
+                            <td>{server}</td>
+                            <td>{wsServer ? (state[wsServer].status ? '+' : '-') : ''}</td>
+                            <td>{state[server].status ? "Работает": "Не работает"}</td>
+                            <td>с {moment(state[server].changedTime).format('DD.MM.YYYY HH:mm:ss')}</td>
+                        </tr>;
+                    })
+                }
+            </tbody></table>;
         }
 
         ReactDOM.render(
