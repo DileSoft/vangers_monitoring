@@ -12,6 +12,40 @@
 <body>
     <div id="main"></div>
     <script type="text/babel">
+
+        let topPlayers = function(games) {
+            const playersStat = {};
+            Object.values(games).forEach(game => {
+                if (game.players) {
+                    Object.values(game.players).forEach(player => {
+                        const matches = player.birth_time.match(/^([0-9]+):([0-9]+):([0-9]+)$/);
+                        if (!playersStat[player.name]) {
+                            playersStat[player.name] = 0;
+                        }
+                        playersStat[player.name] += parseInt(matches[1]) * 3600 + parseInt(matches[2]) * 60 + parseInt(matches[3]);
+                    })
+                }
+            })
+
+            const playersStatArray = Object.keys(playersStat).map(name => (
+                {
+                    name: name,
+                    seconds: playersStat[name],
+                }
+            ));
+
+            playersStatArray.sort((player1, player2) => player1.seconds < player2.seconds ? 1 : -1)
+
+            return <ol>{playersStatArray.map((playerStat, i) => {
+                const hours = Math.floor(playerStat.seconds / 3600);
+                const minutes = Math.floor((playerStat.seconds - hours * 3600) / 60);
+                const seconds = playerStat.seconds - hours * 3600 - minutes * 60;
+                return <li key={i}>
+                    {playerStat.name}: {hours}:{minutes}:{seconds}
+                </li>
+            })}</ol>;
+        }
+
         let Component = function (props) {
             let [state, setState] = React.useState({});
             setTimeout(async () => {
@@ -25,6 +59,8 @@
                 return 'Loading...';
             }
             return <>
+                <h2>Top</h2>
+                {topPlayers(state)}
                 {Object.values(state).filter(game => !!game.start_time).sort((game1, game2) => game1.start_time > game2.start_time ? -1 : 1).map((game, i) => <div key={i}>
                     <h2>{game.name ? game.name : 'Без названия'}</h2>
                     <div>{new Date(game.start_time * 1000).toString()}</div>
