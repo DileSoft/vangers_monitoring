@@ -27,60 +27,75 @@ setInterval(() => {
 }, 1000);
 
 var net = require('net');
-var server = net.createServer(function(socket) {
-    socket.on('data', function(data) {
-        // broadcast(data.toString('utf8'));
-        let json = JSON.parse(data.toString('utf8'));
-        if (json.game && json.player) {
-            if (!results[json.game.uuid]) {
-                results[json.game.uuid] = {
-                    name: json.game.name,
-                    players: {},
-                    chat: []
-                };
-            }
-            let result_game = results[json.game.uuid];
-            if (!result_game.players[json.player.ID]) {
-                result_game.players[json.player.ID] = {
-                    time_in_world: 0,
-                    set_world_time: json.time,
-                    last_check_point_world_time: 0,
-                    checkpoints: []
-                }
-            }
-            let player_data = result_game.players[json.player.ID];
-            if (json.name === 'SET_WORLD') {
-                player_data.set_world_time = json.time;
-            }
-            if (json.name === 'LEAVE_WORLD') {
-                player_data.time_in_world += json.time - player_data.set_world_time;
-                player_data.set_world_time = json.time;
-            }
-            if (json.name === 'DIRECT_SENDING') {
-                if (!result_game.chat) {
-                    result_game.chat = [];
-                }
-                result_game.chat.push({
-                    time: json.time,
-                    text: json.message,
-                    player_id: json.player.ID,
-                    player_name: json.player.name,
-                })
-            }
-            if (json.player.statistics && json.player.statistics.CheckpointLighting) {
-                if (json.player.statistics.CheckpointLighting > player_data.checkpoints.length) {
-                    let checkpoint_time_in_world = player_data.time_in_world + json.time - player_data.set_world_time;
-                    player_data.checkpoints.push({
-                        time: checkpoint_time_in_world - player_data.last_check_point_world_time
-                    });
-
-                    player_data.last_check_point_world_time = checkpoint_time_in_world;
-                }
-            }
-            player_data.name = json.player.name;
-            result_game.name = json.game.name;
+const socket = new net.Socket();
+let connectionInterval;
+socket.on('connect', function () {
+    clearInterval(connectionInterval);
+    socket.write('events');
+});
+socket.on('close', function(e) {
+    connectionInterval = setInterval(function() {
+        socket.connect(2190, '127.0.0.1');
+    }, 1000)
+});
+socket.on('data', function(data) {
+    // broadcast(data.toString('utf8'));
+    if (data.toString()[0] !== '{') {
+        return;
+    }
+    let json = JSON.parse(data.toString('utf8'));
+    if (json.game && json.player) {
+        if (!results[json.game.uuid]) {
+            results[json.game.uuid] = {
+                name: json.game.name,
+                players: {},
+                chat: []
+            };
         }
-        broadcast(JSON.stringify({results, event: json}));
-    });
-}).listen(8488, 'localhost');
+        let result_game = results[json.game.uuid];
+        if (!result_game.players[json.player.ID]) {
+            result_game.players[json.player.ID] = {
+                time_in_world: 0,
+                set_world_time: json.time,
+                last_check_point_world_time: 0,
+                checkpoints: []
+            }
+        }
+        let player_data = result_game.players[json.player.ID];
+        if (json.name === 'SET_WORLD') {
+            player_data.set_world_time = json.time;
+        }
+        if (json.name === 'LEAVE_WORLD') {
+            player_data.time_in_world += json.time - player_data.set_world_time;
+            player_data.set_world_time = json.time;
+        }
+        if (json.name === 'DIRECT_SENDING') {
+            if (!result_game.chat) {
+                result_game.chat = [];
+            }
+            result_game.chat.push({
+                time: json.time,
+                text: json.message,
+                player_id: json.player.ID,
+                player_name: json.player.name,
+            })
+        }
+        if (json.player.statistics && json.player.statistics.CheckpointLighting) {
+            if (json.player.statistics.CheckpointLighting > player_data.checkpoints.length) {
+                let checkpoint_time_in_world = player_data.time_in_world + json.time - player_data.set_world_time;
+                player_data.checkpoints.push({
+                    time: checkpoint_time_in_world - player_data.last_check_point_world_time
+                });
+
+                player_data.last_check_point_world_time = checkpoint_time_in_world;
+            }
+        }
+        player_data.name = json.player.name;
+        result_game.name = json.game.name;
+    }
+    broadcast(JSON.stringify({results, event: json}));
+});
+connectionInterval = setInterval(function() {
+    socket.connect(2190, '127.0.0.1');
+}, 1000)
 console.log('Server started');

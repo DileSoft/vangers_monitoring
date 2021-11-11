@@ -56,33 +56,45 @@ setInterval(() => {
 var net = require('net');
 let chunks = '';
 let chunks_count = 0;
-var server = net.createServer(function(socket) {
-    // confirm socket connection from client
-    // console.log((new Date())+'A client connected to server...');
-    socket.on('data', function(data) {
-        try {
-            //console.log(data.toString());
-            if (chunks === '' && data.toString()[0] !== '{') {
-                return;
-            }
-            if (chunks_count > 10) {
-                chunks = '';
-                chunks_count = 0;
-                return;
-            }
-            chunks += data.toString();
-            chunks_count++;
-            JSON.parse(chunks.toString());
-            broadcast(chunks);
+const socket = new net.Socket();
+let connectionInterval;
+socket.on('connect', function () {
+    clearInterval(connectionInterval);
+    socket.write('monitoring');
+});
+socket.on('close', function(e) {
+    connectionInterval = setInterval(function() {
+        socket.connect(2190, '127.0.0.1');
+    }, 1000)
+});
+socket.on('data', function(data) {
+    try {
+        //console.log(data.toString());
+        console.log(data.toString());
+        if (chunks === '' && data.toString()[0] !== '{') {
+            return;
+        }
+        if (chunks_count > 10) {
             chunks = '';
             chunks_count = 0;
-        } catch (e) {
-            
+            return;
         }
-    });
-    // // send info to client
-    // socket.write('Echo from server: NODE.JS Server \r\n');
-    // socket.pipe(socket);
-    // socket.end();
-    // console.log('The client has disconnected...\n');
-}).listen(8484, 'localhost');
+        chunks += data.toString();
+        chunks_count++;
+        JSON.parse(chunks.toString());
+        broadcast(chunks);
+        chunks = '';
+        chunks_count = 0;
+    } catch (e) {
+        
+    }
+});
+// // send info to client
+// socket.write('Echo from server: NODE.JS Server \r\n');
+// socket.pipe(socket);
+// socket.end();
+// console.log('The client has disconnected...\n');
+
+connectionInterval = setInterval(function() {
+    socket.connect(2190, '127.0.0.1');
+}, 1000)
