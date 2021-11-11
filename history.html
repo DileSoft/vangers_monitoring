@@ -61,14 +61,16 @@
             return <>
                 <h2>Top</h2>
                 {topPlayers(state)}
-                {Object.values(state).filter(game => !!game.start_time).sort((game1, game2) => game1.start_time > game2.start_time ? -1 : 1).map((game, i) => <div key={i}>
+                {Object.values(state).filter(game => !!game.start_time && game.name).sort((game1, game2) => game1.start_time > game2.start_time ? -1 : 1).map((game, i) => <div key={i}>
                     <h2>{game.name ? game.name : 'Без названия'}</h2>
                     <div>{new Date(game.start_time * 1000).toString()}</div>
                     {game.players ? Object.values(game.players).map((player, p_i) => <div key={p_i}>
                         <h4>{player.name}</h4>
+                        {/*
                         <pre>
                             {JSON.stringify(player, null, 2)}
                         </pre>
+                        */}
                     </div>) : null}
                 </div>)}
             </>

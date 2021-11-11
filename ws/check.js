@@ -108,7 +108,7 @@ const check = () => {
 
 servers.forEach(server => changeStatus(server.name, false));
 check();
-setInterval(check, 10000);
+setInterval(check, 30 * 60 * 1000);
 
 app.get('/', (req, res) => {
   res.send(JSON.stringify(status, null, 4));
