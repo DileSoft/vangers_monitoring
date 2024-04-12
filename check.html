@@ -2,18 +2,18 @@
 <head>
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <meta charset="UTF-8" />
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <!-- Don't use this in production: -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.4/babel.min.js"></script>
 
     <style>
         table { border-spacing: 0; }
         tbody { font-size: 1.5em; font-weight: bold; }
-        tr.on { color: green; }
-        tr.off { color: red; }
+        .on { color: green; }
+        .off { color: red; }
         td { padding: 0.2em; }
         thead td { text-align: center; }
         tbody > tr > td:nth-child(2) { text-align: center; }
@@ -45,11 +45,11 @@
                 {Object.keys(state)
                     .sort((server1, server2) => server1 > server2 ? 1 : -1)
                     .map((server, index, keys) => {
-                        if (server.includes('[browser]')) return null;
-                        const wsServer = keys.find(key => key.includes(server) && key.includes('[browser]') && (server.includes('[cx]') ? key.includes('[cx]') : !key.includes('[cx]')));
+                        if (state[server].data.websocket) return null;
+                        const wsServer = keys.find(findServer =>state[findServer].data.websocket && state[findServer].data.host === state[server].data.host && state[findServer].data.version === state[server].data.version);
                         return <tr key={server} className={state[server].status ? 'on' : 'off'}>
                             <td>{server}</td>
-                            <td>{wsServer ? (state[wsServer].status ? '+' : '-') : ''}</td>
+                            <td>{wsServer ? (state[wsServer].status ? <span className="on">+</span> : <span className="off">-</span>) : ''}</td>
                             <td>{state[server].status ? "Работает": "Не работает"}</td>
                             <td>с {moment(state[server].changedTime).format('DD.MM.YYYY HH:mm:ss')}</td>
                         </tr>;

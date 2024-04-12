@@ -9,14 +9,16 @@ const port = 2222;
 const servers = require('./servers');
 const status = {};
 
-const changeStatus = (server, newStatus) => {
-  if (!status[server]) {
-    status[server] = {}
+const changeStatus = (name, newStatus) => {
+  if (!status[name]) {
+    status[name] = {
+      data: servers.find(server => server.name === name)
+    }
   }
-  if (status[server].status !== newStatus) {
-    status[server].changedTime = new Date().toISOString();
+  if (status[name].status !== newStatus) {
+    status[name].changedTime = new Date().toISOString();
   }
-  status[server].status = newStatus;
+  status[name].status = newStatus;
 }
 
 const get_event_buffer = (code, dataBuffer) => {
